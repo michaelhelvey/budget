@@ -5,5 +5,5 @@ client = TestClient(app)
 
 
 def test_hello_world():
-    response = client.get('/')
-    assert response.json()['Hello'] == 'World'
+    response = client.get("/")
+    assert response.json()["Hello"] == "World"

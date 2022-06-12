@@ -6,11 +6,11 @@ from subprocess import call
 
 def format(args):
     """
-    Auto-formats project using autopep8.
+    Auto-formats project using black.
     """
-    autopep8_args = ["pipenv", "run", "autopep8", "--in-place", "--aggressive", "-r", "api"]
-    print("Formatting code:", " ".join(autopep8_args))
-    return call(autopep8_args)
+    black_args = ["pipenv", "run", "black", "-l", "79", "."]
+    print("Formatting code:", " ".join(black_args))
+    return call(black_args)
 
 
 def lint(args):
@@ -41,10 +41,10 @@ def dev(args):
 
 
 commands = (
-    ('format', format),
-    ('test', test, {'coverage': 'Generate coverage report'}),
-    ('dev', dev),
-    ('lint', lint)
+    ("format", format),
+    ("test", test, {"coverage": "Generate coverage report"}),
+    ("dev", dev),
+    ("lint", lint),
 )
 
 
@@ -59,8 +59,7 @@ def main() -> int:
 
         if len(command) > 2:
             for argument, doc in command[2].items():
-                sub_parser.add_argument(
-                    f"--{argument}", action='store_true', help=doc)
+                sub_parser.add_argument(f"--{argument}", action="store_true", help=doc)
 
     args = parser.parse_args()
     return args.func(args)
