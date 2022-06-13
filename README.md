@@ -15,6 +15,11 @@ Use the built-in task runner to excute commands:
 - `./x.py format` (formats project with autopep8)
 - `./x.py test` (tests project with pytest)
 
+## Design
+
+Mocks for the application can be found on my personal Figma,
+[here](https://www.figma.com/file/pWr2duGU1xBJDSKWY4jRFp/Feature-Mocks?node-id=5%3A19)
+
 ## License
 
 MIT
