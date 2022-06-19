@@ -166,3 +166,5 @@ cython_debug/
 # Node.js
 dist
 node_modules
+
+db.json
