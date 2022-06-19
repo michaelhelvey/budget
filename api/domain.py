@@ -37,6 +37,7 @@ class MonthlyState(BaseModel):
     fixed_expenses: list[FixedExpense]
     transactions: list[Transaction]
 
+    @staticmethod
     def key_for_date(dt: datetime):
         return dt.strftime("%m/%y")
 

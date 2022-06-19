@@ -57,7 +57,7 @@ def maybe_rollover_month(db: ApplicationState, get_now=datetime.now):
 
     if la.month != now.month:
         # create a new month
-        new_monthly_state = MonthlyState.new_from_defaults(db.defaultsf)
+        new_monthly_state = MonthlyState.new_from_defaults(db.defaults)
         db.state[new_monthly_state.key_for_date(now)] = new_monthly_state
 
 

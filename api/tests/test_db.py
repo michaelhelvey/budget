@@ -1,11 +1,15 @@
 import json
 import os
 from datetime import datetime
-from unittest.mock import patch
 
 import pytest
 from api.config import BASE_DIR, DB_PATH
-from api.db import ensure_exists, get_db_instance, save_state_to_file
+from api.db import (
+    ensure_exists,
+    get_db_instance,
+    save_state_to_file,
+    maybe_rollover_month,
+)
 from api.domain import ApplicationState, User
 
 from .utils import reset_db
@@ -56,3 +60,16 @@ def test_can_save_new_state():
 
     with open(DB_PATH, "r") as db_file:
         assert json.loads(db_file.read())["users"][0]["email"] == "michael@1234.com"
+
+
+def test_rollsover_month_when_month_is_completed():
+    last_accessed = datetime(2022, 6, 1)
+    now = datetime(2022, 7, 1)
+
+    db = get_db_instance()
+    db.last_accessed = last_accessed
+
+    assert db.state.get("07/22") == None
+
+    maybe_rollover_month(db, lambda: now)
+    assert db.state.get("07/22") == {**db.defaults.dict(), "transactions": []}
