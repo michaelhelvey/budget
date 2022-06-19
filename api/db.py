@@ -45,6 +45,9 @@ def get_db_instance() -> ApplicationState:
 
     return _db
 
+def _delete_db_singleton():
+    global _db
+    _db = None
 
 def save_state_to_file(state: ApplicationState):
     with open(DB_PATH, "w") as file:

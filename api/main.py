@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Optional
 from datetime import datetime
 
@@ -62,9 +61,33 @@ async def read_root(body: LoginBody, response: Response, db=Depends(database)):
             "auth_token",
             token,
             expires=datetime.now() - JWT_EXP,
-            httponly=True,
-            secure=True,
+            # TODO: enable these once we're not on localhost
+            # httponly=True,
+            # secure=True,
         )
+
+
+class CreateUserBody(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+@app.post("/accounts/create")
+async def create_user(
+    body: CreateUserBody,
+    response: Response,
+    response_model=User,
+    response_model_include={"name", "email"},
+    db=Depends(database),
+):
+    auth = AuthProvider(db)
+    user = User(
+        name=body.name, email=body.email, password_hash=auth.hash_pw(body.password)
+    )
+    db.users.append(user)
+    response.status_code = status.HTTP_201_CREATED
+    return user
 
 
 class AccountsMeResponse(BaseModel):
@@ -116,3 +139,4 @@ async def get_monthly_summary(
     user: User = Depends(get_current_user), db: ApplicationState = Depends(database)
 ):
     summary = get_monthly_report(db, db.get_current_state(), datetime.now())
+    return summary

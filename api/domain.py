@@ -6,13 +6,9 @@ from functools import reduce
 
 from pydantic import BaseModel
 
-from api.db import get_db_instance
-
-Category = str
-
 
 class FixedExpense(BaseModel):
-    category: Category
+    category: str
     amount: int
 
 
@@ -23,7 +19,7 @@ class User(BaseModel):
 
 
 class Transaction(BaseModel):
-    category: Category
+    category: str
     amount: int
     created_at: datetime
     user: str
@@ -46,7 +42,7 @@ class MonthlyState(BaseModel):
     @staticmethod
     def key_for_date(dt: datetime):
         return dt.strftime(MonthlyState._DATE_FORMAT)
-    
+
     @staticmethod
     def date_for_key(key: str):
         return datetime.strptime(key, MonthlyState._DATE_FORMAT)
@@ -75,14 +71,17 @@ class ApplicationState(BaseModel):
 
         return self.state[key]
 
+
 """
 REPORTING
 """
+
 
 class MonthlyTotals(BaseModel):
     income: int
     spent: int
     remaining: int
+
 
 class MonthlyCategoryReport(BaseModel):
     category: str
@@ -90,25 +89,32 @@ class MonthlyCategoryReport(BaseModel):
     vs_previous_month: float
     transactions: list[Transaction]
 
+
 class MonthlyReport(BaseModel):
-    totals:  MonthlyTotals
+    totals: MonthlyTotals
     categories: Dict[str, MonthlyCategoryReport]
+
 
 def get_previous_month(dt: datetime):
     if dt.month == 1:
         previous_month = 12
     else:
         previous_month = dt.month - 1
-    
-    return datetime(dt.year, previous_month)
 
-def get_monthly_report(db: ApplicationState, state: MonthlyState, end_time: datetime) -> MonthlyReport:
+    return datetime(dt.year, previous_month, 1)
+
+
+def get_monthly_report(
+    db: ApplicationState, state: MonthlyState, end_time: datetime
+) -> MonthlyReport:
     total_spent = sum(map(lambda t: t.amount, state.transactions))
     total_remaining = state.monthly_income - total_spent
 
-    totals = MonthlyTotals(income=state.monthly_income, spent=total_spent, remaining=total_remaining)
+    totals = MonthlyTotals(
+        income=state.monthly_income, spent=total_spent, remaining=total_remaining
+    )
 
-    categories = {}
+    categories: dict[str, MonthlyCategoryReport] = {}
     for transaction in state.transactions:
         # only select transactions up until the given "end of report" date
         if transaction.created_at > end_time:
@@ -116,7 +122,12 @@ def get_monthly_report(db: ApplicationState, state: MonthlyState, end_time: date
 
         if categories.get(transaction.category) is None:
             # if we don't have one already, create a new one initialized with the first transaction
-            category_report = MonthlyCategoryReport(category=transaction.category, total=transaction.amount, vs_previous_month=0, transactions=[transaction])
+            category_report = MonthlyCategoryReport(
+                category=transaction.category,
+                total=transaction.amount,
+                vs_previous_month=0,
+                transactions=[transaction],
+            )
             categories[transaction.category] = category_report
         else:
             # we already have a category, append
@@ -124,7 +135,7 @@ def get_monthly_report(db: ApplicationState, state: MonthlyState, end_time: date
 
             category_report.transactions.append(transaction)
             category_report.total += transaction.amount
-    
+
     # now we have a mapping of all categories, and we need to calculate the vs. previous months
     previous_month_key = state.key_for_date(get_previous_month(end_time))
     if not db.state.get(previous_month_key):
@@ -135,6 +146,22 @@ def get_monthly_report(db: ApplicationState, state: MonthlyState, end_time: date
 
     day_count = end_time.day
     for category in categories.values():
-        # TODO: sum previous month transactions for category for the same number
-        # of days as end_time is for current month, generate percentage
-        pass
+        previous_sum = 0
+
+        # Yes, this is O(n^2), but you know what else isn't optimal?  You.
+        for transaction in previous_month_state.transactions:
+            if transaction.created_at.day > day_count:
+                break
+                
+            if transaction.category != category.category:
+                continue
+
+            previous_sum += transaction.amount
+
+        # category: MonthlyCategoryReport
+        if previous_sum:
+            result = category.total / previous_sum  # e.g. 100 / 90 = 1.11
+            result = result * 100  # e.g. 111
+            category.vs_previous_month = result - 100  # e.g. 111-100 = 11%
+
+    return MonthlyReport(totals=totals, categories=categories)

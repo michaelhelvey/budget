@@ -1,7 +1,7 @@
 import os
 from api.config import DB_PATH
 from api.domain import User
-from api.db import get_db_instance, save_state_to_file
+from api.db import get_db_instance, save_state_to_file, _delete_db_singleton
 from api.auth import AuthProvider
 
 
@@ -23,3 +23,4 @@ def util_create_user(name: str, email: str, password: str) -> User:
 def reset_db():
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
+        _delete_db_singleton()

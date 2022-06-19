@@ -24,4 +24,4 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if os.getenv("APP_ENV") == "testing":
     DB_PATH = os.path.join(BASE_DIR, "db_testing.json")
 else:
-    DB_PATH = os.path.join(BASE_DIR, "db.json")
+    DB_PATH = _config_get("DB_PATH", os.path.join(BASE_DIR, "db.json"))

@@ -1,0 +1,39 @@
+{
+  "totals": {
+    "income": 570000,
+    "spent": 2000,
+    "remaining": 568000
+  },
+  "categories": {
+    "Grocery": {
+      "category": "Grocery",
+      "total": 1000,
+      "vs_previous_month": -50.0,
+      "transactions": [
+        {
+          "category": "Grocery",
+          "amount": 1000,
+          "created_at": "2022-06-19T13:20:45.736731",
+          "user": "michael.helvey1@gmail.com",
+          "title": "Hyvee",
+          "notes": "Beer"
+        }
+      ]
+    },
+    "weird category": {
+      "category": "weird category",
+      "total": 1000,
+      "vs_previous_month": 0.0,
+      "transactions": [
+        {
+          "category": "weird category",
+          "amount": 1000,
+          "created_at": "2022-06-19T13:20:45.736731",
+          "user": "michael.helvey1@gmail.com",
+          "title": null,
+          "notes": null
+        }
+      ]
+    }
+  }
+}

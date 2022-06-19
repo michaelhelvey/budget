@@ -1,14 +1,20 @@
-from datetime import datetime
+import json
+import os
 
 import pytest
 from api.auth import AuthProvider
-from api.db import get_db_instance
-from api.domain import MonthlyState
+from api.db import (
+    get_db_instance,
+    get_user_with_email,
+    save_state_to_file,
+    _delete_db_singleton,
+)
 from api.main import app
+from api.domain import ApplicationState
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from .utils import util_create_user
+from .utils import reset_db, util_create_user
 
 client = TestClient(app)
 
@@ -36,6 +42,18 @@ def test_login():
     assert auth.validate_token(token).email == user.email
 
 
+def test_accounts_create():
+    body = {"name": "foo", "email": "bar@example.com", "password": 1234}
+    response = client.post("/accounts/create", json=body)
+    json_body = response.json()
+    assert json_body["name"] == "foo"
+    assert json_body["email"] == "bar@example.com"
+
+    db = get_db_instance()
+    db_user = get_user_with_email(db, "bar@example.com")
+    assert db_user.name == "foo"
+
+
 def test_accounts_me(auth_token):
     user, token = auth_token
     response = client.get("/accounts/me", cookies={"auth_token": token})
@@ -48,6 +66,7 @@ def test_accounts_me(auth_token):
 
 
 def test_user_required_no_user_token():
+    client.cookies.clear()
     response = client.get("/accounts/me")
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -80,7 +99,20 @@ def test_get_state(auth_token):
 
 
 def test_get_summary(auth_token):
-    user, token = auth_token
-    response = client.get("/months/current", cookies={"auth_token": token})
+    test_dir = os.path.dirname(__file__)
+    reset_db()
+    db = get_db_instance()
+    with open(os.path.join(test_dir, "fixtures", "test_db_state.json")) as db_file:
+        db = ApplicationState(**json.loads(db_file.read()))
+        save_state_to_file(db)
+        _delete_db_singleton()
+        with open(
+            os.path.join(test_dir, "fixtures", "report_snapshot.json")
+        ) as response_file:
+            user, token = auth_token
+            response = client.get("/months/current", cookies={"auth_token": token})
 
-    assert response.status_code == status.HTTP_200_OK
+
+            assert response.status_code == status.HTTP_200_OK
+            expected_response = json.loads(response_file.read())
+            assert response.json() == expected_response
