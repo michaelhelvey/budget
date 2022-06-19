@@ -3,7 +3,7 @@ import { ErrorBoundary } from "react-error-boundary"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { AuthContextProvider, RequireAuth } from "./components/Auth"
 import { Home } from "./components/Home"
-import { Login } from "./Login"
+import { Login } from "./components/Login"
 
 function App() {
     return (

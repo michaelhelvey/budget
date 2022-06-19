@@ -144,3 +144,7 @@ async def get_monthly_summary(
 ):
     summary = get_monthly_report(db, db.get_current_state(), datetime.now())
     return summary
+
+@app.get("/variable_categories")
+async def get_variable_categories(db: ApplicationState = Depends(database)):
+    return db.variable_categories

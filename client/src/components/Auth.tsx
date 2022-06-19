@@ -30,7 +30,6 @@ const AuthContext = createContext<AuthContextType>(
 function initializeUser(): User | null {
     const user = localStorage.getItem("user")
     const expirationStr = localStorage.getItem("user_expiration")
-    console.log("user: %o, expiration: %s", user, expirationStr)
 
     // if expiration string is out of date, does not exist, or if user doesn't
     // exist, clear everything and return null -- as far as we can tell, the

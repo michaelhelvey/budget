@@ -1,6 +1,6 @@
 import React, { FormEvent, MouseEvent, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useAuth } from "./components/Auth"
+import { useAuth } from "./Auth"
 
 const inputClasses =
     "px-3 py-2 border border-gray-200 bg-white text-sm text-gray-800 rounded"
