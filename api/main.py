@@ -60,10 +60,9 @@ async def read_root(body: LoginBody, response: Response, db=Depends(database)):
         response.set_cookie(
             "auth_token",
             token,
-            expires=datetime.now() - JWT_EXP,
-            # TODO: enable these once we're not on localhost
-            # httponly=True,
-            # secure=True,
+            expires=datetime.now() + JWT_EXP,
+            httponly=True,
+            samesite="lax",
         )
 
 
@@ -90,13 +89,18 @@ async def create_user(
     return user
 
 
-class AccountsMeResponse(BaseModel):
-    user: User
+@app.post("/accounts/logout")
+async def logout(response: Response):
+    response.set_cookie("auth_token", "", expires=0)
 
 
 @app.get("/accounts/me")
-async def get_me(current_user: User = Depends(get_current_user)):
-    return AccountsMeResponse(user=current_user)
+async def get_me(
+    current_user: User = Depends(get_current_user),
+    response_model=User,
+    response_model_include={"name", "email"},
+):
+    return current_user
 
 
 class TransactionIn(BaseModel):

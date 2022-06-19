@@ -62,7 +62,7 @@ def test_accounts_me(auth_token):
     user_json = user.dict()
 
     for key in ["name", "email"]:
-        assert user_json[key] == response_json["user"][key]
+        assert user_json[key] == response_json[key]
 
 
 def test_user_required_no_user_token():
