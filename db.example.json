@@ -7,7 +7,7 @@
   ],
   "last_accessed": "2022-06-12T08:59:25.620264",
   "defaults": {
-    "monthly_income": 6000000,
+    "monthly_income": 600000,
     "fixed_expenses": [
       {
         "category": "Mortgage",
@@ -16,6 +16,10 @@
       {
         "category": "Insurance",
         "amount": 20000
+      },
+      {
+        "category": "Giving",
+        "amount": 30000
       }
     ]
   },
@@ -38,6 +42,10 @@
         {
           "category": "Insurance",
           "amount": 20000
+        },
+        {
+          "category": "Giving",
+          "amount": 30000
         }
       ],
       "transactions": [
