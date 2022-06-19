@@ -1,14 +1,14 @@
+from copy import deepcopy
+from typing import Optional
 from datetime import datetime
-import http
-from typing import Union
 
-from fastapi import Depends, FastAPI, Request, Response, status
+from fastapi import Depends, FastAPI, Request, Response, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from api.auth import JWT_EXP, AuthProvider
 
 from api.db import get_db_instance, save_state_to_file
-from api.domain import User
+from api.domain import ApplicationState, Transaction, User, get_monthly_report
 
 app = FastAPI()
 
@@ -33,10 +33,15 @@ async def database():
         print(f"Not saving database because there was an exception: {e}")
 
 
-async def get_current_user(request: Request, db = Depends(database)):
+async def get_current_user(request: Request, db=Depends(database)):
     token = request.cookies.get("auth_token")
     auth = AuthProvider(db)
-    return auth.validate_token(token)
+    user = auth.validate_token(token)
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    return user
 
 
 class LoginBody(BaseModel):
@@ -67,5 +72,47 @@ class AccountsMeResponse(BaseModel):
 
 
 @app.get("/accounts/me")
-async def read_item(response_model=AccountsMeResponse, current_user: User = Depends(get_current_user)):
+async def get_me(current_user: User = Depends(get_current_user)):
     return AccountsMeResponse(user=current_user)
+
+
+class TransactionIn(BaseModel):
+    category: str
+    amount: int
+    title: Optional[str]
+    notes: Optional[str]
+
+
+@app.post("/transactions")
+async def create_transaction(
+    transaction_body: TransactionIn,
+    response: Response,
+    current_user=Depends(get_current_user),
+    db: ApplicationState = Depends(database),
+):
+    transaction = Transaction(
+        **{
+            **transaction_body.dict(),
+            "created_at": datetime.now(),
+            "user": current_user.email,
+        }
+    )
+    db.get_current_state().transactions.append(transaction)
+    response.status_code = status.HTTP_201_CREATED
+    return transaction
+
+
+@app.get("/_internal/state")
+async def dump_state(
+    user: User = Depends(get_current_user), db: ApplicationState = Depends(database)
+):
+    # note that this dumps users's password hashes, so it's not really a
+    # longterm solution
+    return db
+
+
+@app.get("/months/current")
+async def get_monthly_summary(
+    user: User = Depends(get_current_user), db: ApplicationState = Depends(database)
+):
+    summary = get_monthly_report(db, db.get_current_state(), datetime.now())

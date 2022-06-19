@@ -44,18 +44,15 @@ Mocks for the application can be found on my personal Figma,
         income: 1000000,
         remaining: 10000,
     },
-    transactions: {
-        grocery: [
-            {
+    categories: {
+        grocery: {
+            category: "grocery",
+            total: 10000,
+            vs_previous_month: 10.1,
+            transactions: [{
                 /* transaction data */
-            }
-        ],
-        giving: [
-            {
-                /* transaction data */
-            }
-        ]
-
+            }]
+        },
     }
 }
 ```
