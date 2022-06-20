@@ -81,6 +81,7 @@ class MonthlyTotals(BaseModel):
     income: int
     spent: int
     remaining: int
+    unallocated: int
 
 
 class MonthlyCategoryReport(BaseModel):
@@ -110,8 +111,13 @@ def get_monthly_report(
     total_spent = sum(map(lambda t: t.amount, state.transactions))
     total_remaining = state.monthly_income - total_spent
 
+    unallocated = sum(map(lambda x: x.amount, state.fixed_expenses))
+
     totals = MonthlyTotals(
-        income=state.monthly_income, spent=total_spent, remaining=total_remaining
+        income=state.monthly_income,
+        spent=total_spent,
+        remaining=total_remaining,
+        unallocated=unallocated,
     )
 
     categories: dict[str, MonthlyCategoryReport] = {}
@@ -152,7 +158,7 @@ def get_monthly_report(
         for transaction in previous_month_state.transactions:
             if transaction.created_at.day > day_count:
                 break
-                
+
             if transaction.category != category.category:
                 continue
 
